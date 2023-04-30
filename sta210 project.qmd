@@ -58,7 +58,7 @@ soccer %>%
 
 Plot 3:
 ```{r warnings = F}
-ggplot(data = soccer, aes(x = winspermatch, y = goalmargin)) +
+ggplot(data = soccer, aes(x = winspermatch, y = goalmarginpermatch)) +
   geom_point() +
   geom_smooth(method = 'lm', se = F, color = 'midnightblue') +
   #geom_hline(yintercept = 0, color = 'red') +
