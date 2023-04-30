@@ -13,11 +13,84 @@ library(readxl)
 soccer <- read_excel("AllTimeRankingByClub.xlsx")
 ```
 
+#### Introduction and data
 
-## Introduction
+## Data Cleaning
+```{r}
+soccer = soccer %>%
+  rename(goals_for = `Goals For`,
+         goals_against = `Goals Against`,
+         goal_diff = `Goal Diff`)
 
-## Methods
+soccer = soccer %>%
+  mutate(winspermatch = Win/Played,
+         pointspermatch = Pts/Played,
+         goalspermatch = goals_for/Played,
+         goalsagainstpermatch = goals_against/Played,
+         goalmargin = goal_diff/Played)
+```
 
-## Results
+## EDA
 
-## Conclusion
+Plot 1: 
+```{r}
+soccer %>%
+  filter(Titles > 0) %>%
+  ggplot(aes(x = reorder(Club, (-Titles)), y = Titles)) +
+  geom_bar(stat = 'identity') +
+  labs(x = 'Club', y = 'Number of Titles', title = 'Number of Titles for each Club',
+       subtitle = 'Excluding Clubs That Have Never Won a Title') +
+  theme_bw() +
+  scale_x_discrete(guide = guide_axis(angle = 45))
+```
+
+Plot 2:
+```{r}
+soccer %>%
+  filter(Titles > 0) %>%
+  ggplot(aes(x = reorder(Country, (-Titles)), y = Titles)) +
+  geom_bar(stat = 'identity') +
+  labs(x = 'Country', y = 'Number of Titles', title = 'Number of Titles per Country',
+       subtitle = 'Excluding Clubs That Have Never Won a Title') +
+  theme_bw() +
+  scale_x_discrete(guide = guide_axis(angle = 45))
+```
+
+Plot 3:
+```{r warnings = F}
+ggplot(data = soccer, aes(x = winspermatch, y = goalmargin)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = F, color = 'midnightblue') +
+  #geom_hline(yintercept = 0, color = 'red') +
+  labs(x = "Win Percentage", y = 'Goal Margin per Match', 
+       title = 'Number of Wins in Tournament vs Goal Differential') +
+  theme_bw()
+```
+
+
+#### Methods
+
+#### Results
+
+#### Conclusion
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
