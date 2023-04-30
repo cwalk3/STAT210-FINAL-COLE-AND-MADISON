@@ -1,0 +1,15 @@
+---
+title: "sta210 project"
+author: "Cole Walker, Madison Griffin"
+format: pdf
+editor: visual
+---
+## loading packages & dataset
+
+## Introduction
+
+## Methods
+
+## Results
+
+## Conclusion
