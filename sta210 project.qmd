@@ -27,7 +27,7 @@ soccer = soccer %>%
          pointspermatch = Pts/Played,
          goalspermatch = goals_for/Played,
          goalsagainstpermatch = goals_against/Played,
-         goalmargin = goal_diff/Played)
+         goalmarginpermatch = goal_diff/Played)
 ```
 
 ## EDA
