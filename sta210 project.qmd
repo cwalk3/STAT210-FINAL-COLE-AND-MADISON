@@ -4,7 +4,15 @@ author: "Cole Walker, Madison Griffin"
 format: pdf
 editor: visual
 ---
+
 ## loading packages & dataset
+```{r message = F}
+library(tidyverse)
+library(tidymodels)
+library(readxl)
+soccer <- read_excel("AllTimeRankingByClub.xlsx")
+```
+
 
 ## Introduction
 
