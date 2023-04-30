@@ -28,6 +28,9 @@ soccer = soccer %>%
          goalspermatch = goals_for/Played,
          goalsagainstpermatch = goals_against/Played,
          goalmarginpermatch = goal_diff/Played)
+
+soccer = soccer %>%
+  mutate(topfiveleague = ifelse(Country == 'ESP' | Country == 'ENG' | Country == 'GER' | Country == 'ITA' | Country == 'FRA', "top five", "not top five"))
 ```
 
 ## EDA
@@ -61,9 +64,8 @@ Plot 3:
 ggplot(data = soccer, aes(x = winspermatch, y = goalmarginpermatch)) +
   geom_point() +
   geom_smooth(method = 'lm', se = F, color = 'midnightblue') +
-  #geom_hline(yintercept = 0, color = 'red') +
   labs(x = "Win Percentage", y = 'Goal Margin per Match', 
-       title = 'Number of Wins in Tournament vs Goal Differential') +
+       title = 'Club Win Percentage in Tournament vs. Goal Margin Per Match') +
   theme_bw()
 ```
 
