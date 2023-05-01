@@ -80,7 +80,11 @@ ggplot(data = soccer, aes(x = winspermatch, y = goalmarginpermatch)) +
   theme_bw()
 ```
 
-#### Methods
+## Methods
+
+we can only do linear or linear mixed effects...expand later
+
+#### Checking Assumptions
 Model 1: Linear Regression
 
 Outcome:
@@ -91,34 +95,29 @@ Predictors:
 
 - wins per match
 
-- goals per match
-
-- goals against per match
-
 - goal margin per match
 
 - top five league
 
 ```{r}
-model1 = lm(pointspermatch ~ winspermatch + goalspermatch + 
-               goalsagainstpermatch + goalmarginpermatch + topfiveleague, 
-               data = soccer)
-summary(model1)
+linear = lm(pointspermatch ~ winspermatch + goalmarginpermatch + topfiveleague, 
+            data = soccer)
+summary(linear)
 ```
 
 Conditions for Model 1:
 Violated linearity, constant variance, and normality
 ```{r}
-model1aug = augment(model1)
+linearaug = augment(linear)
 
-ggplot(model1aug, aes(x = .fitted, y = .resid)) +
+ggplot(linearaug, aes(x = .fitted, y = .resid)) +
   geom_point() +
   geom_hline(yintercept = 0, color = 'maroon') +
   labs(x = "Fitted (predicted) values", y = 'Residual') +
   ggtitle('Residual Plot Violates Linearity & Constant Variance Assumptions') +
   theme_bw()
 
-ggplot(model1aug, aes(sample = .resid)) +
+ggplot(linearaug, aes(sample = .resid)) +
   stat_qq() +
   stat_qq_line() +
   theme_bw() +
@@ -127,59 +126,7 @@ ggplot(model1aug, aes(sample = .resid)) +
        title = 'QQ Plot Violates Normality Assumption')
 ```
 
-testing correlations because something is weird
-
-```{r}
-test = soccer %>%
-  dplyr::select(pointspermatch, winspermatch, goalspermatch, goalsagainstpermatch, goalmarginpermatch)
-
-cor(test)
-```
-Model 2: Linear Regression
-
-Outcome:
-
-- points per match
-
-Predictors:
-
-- wins per match
-
-- goals per match
-
-- goals against per match
-
-- top five league
-
-```{r}
-model2 = lm(pointspermatch ~ winspermatch + goalspermatch + 
-               goalsagainstpermatch + topfiveleague, 
-               data = soccer)
-summary(model2)
-```
-Check Assumptions for Model 2
-still all violated
-
-```{r}
-model2aug = augment(model2)
-
-ggplot(model2aug, aes(x = .fitted, y = .resid)) +
-  geom_point() +
-  geom_hline(yintercept = 0, color = 'maroon') +
-  labs(x = "Fitted (predicted) values", y = 'Residual') +
-  ggtitle('Residual Plot Violates Linearity & Constant Variance Assumptions') +
-  theme_bw()
-
-ggplot(model2aug, aes(sample = .resid)) +
-  stat_qq() +
-  stat_qq_line() +
-  theme_bw() +
-  labs(x = 'Theoretical quantiles',
-       y = 'Sample quantiles',
-       title = 'QQ Plot Violates Normality Assumption')
-```
-
-Model 3: Linear Regression
+Model 2: Linear Mixed Effects Model
 
 Outcome:
 
@@ -191,135 +138,25 @@ Predictors:
 
 - goal margin per match
 
-- top five league
+- random intercept for top five league
+
 
 ```{r}
-model3 = lm(pointspermatch ~ winspermatch + goalmarginpermatch + topfiveleague, 
-            data = soccer)
-summary(model3)
-```
-Check Assumptions Model 3
-
-```{r}
-model3aug = augment(model3)
-
-ggplot(model3aug, aes(x = .fitted, y = .resid)) +
-  geom_point() +
-  geom_hline(yintercept = 0, color = 'maroon') +
-  labs(x = "Fitted (predicted) values", y = 'Residual') +
-  ggtitle('Residual Plot Violates Linearity & Constant Variance Assumptions') +
-  theme_bw()
-
-ggplot(model3aug, aes(sample = .resid)) +
-  stat_qq() +
-  stat_qq_line() +
-  theme_bw() +
-  labs(x = 'Theoretical quantiles',
-       y = 'Sample quantiles',
-       title = 'QQ Plot Violates Normality Assumption')
-```
-
-Model 4: Linear Mixed Effects Model (potential violation of independence with topfiveleague)
-
-Outcome:
-
-- points per match
-
-Predictors:
-
-- random intercept for topfiveleague
-
-- goal margin per match
-
-- wins per match
-
-- goals per match
-
-```{r}
-model4 = lmer(pointspermatch ~ 1 + goalspermatch + winspermatch + goalsagainstpermatch +
+linearmixed = lmer(pointspermatch ~ 1 + winspermatch + goalmarginpermatch +
               (1|topfiveleague), data = soccer)
-summary(model4)
+summary(linearmixed)
 ```
 
-Checking assumptions model 4
 
 ```{r}
-plot(model4)
-hist((resid(model4) - mean(resid(model4))) / sd(resid(model4)), freq = FALSE); curve(dnorm, add = TRUE)
-```
-
-Model 5: Linear Regression
-
-Outcome:
-
-- points per match
-
-Predictors:
-
-- topfiveleague
-
-- goal margin per match
-
-- goals per match
-
-- goals against per match
-
-```{r}
-model5 = lm(pointspermatch ~ goalspermatch + goalsagainstpermatch + goalmarginpermatch +
-            topfiveleague, data = soccer)
-summary(model5)
-```
-
-Checking Assumptions
-
-```{r}
-model5aug = augment(model5)
-
-ggplot(model5aug, aes(x = .fitted, y = .resid)) +
-  geom_point() +
-  geom_hline(yintercept = 0, color = 'maroon') +
-  labs(x = "Fitted (predicted) values", y = 'Residual') +
-  ggtitle('Residual Plot Violates Linearity & Constant Variance Assumptions') +
-  theme_bw()
-
-ggplot(model5aug, aes(sample = .resid)) +
-  stat_qq() +
-  stat_qq_line() +
-  theme_bw() +
-  labs(x = 'Theoretical quantiles',
-       y = 'Sample quantiles',
-       title = 'QQ Plot Violates Normality Assumption')
-```
-
-Model 6: linear mixed effects (random intercept for topfiveleague)
-
-Outcome:
-
-- points per match
-
-Predictors:
-
-- random intercept for topfiveleague
-
-- goal margin per match
-
-- goals per match
-
-```{r}
-model6 = lmer(pointspermatch ~ 1 + goalspermatch + goalsagainstpermatch + goalmarginpermatch +
-              (1|topfiveleague), data = soccer)
-summary(model6)
-```
-
-Checking assumptions:
-
-```{r}
-plot(model6)
-hist((resid(model6) - mean(resid(model6))) / sd(resid(model6)), freq = FALSE); curve(dnorm, add = TRUE)
+plot(linearmixed)
+hist((resid(linearmixed) - mean(resid(linearmixed))) / sd(resid(linearmixed)), freq = FALSE); curve(dnorm, add = TRUE)
 ```
 
 
-## Variable Selection - LASSO
+Assumptions are worse for mixed effects...moving forward with linear regression
+
+#### Variable Selection - LASSO
 
 ```{r}
 y = soccer$pointspermatch
@@ -337,7 +174,7 @@ bestlasso = lm(pointspermatch ~ winspermatch + goalmarginpermatch + topfiveleagu
                data = soccer)
 ```
 
-## Variable Selection - Stepwise Selection
+#### Variable Selection - Stepwise Selection
 
 ```{r}
 m_none = lm(pointspermatch ~ 1, data = soccer)
@@ -374,7 +211,7 @@ stepAIC(m_none,
 bestboth = lm(pointspermatch ~ winspermatch + goalmarginpermatch + topfiveleague, data = soccer)
 ```
 
-## Variable Selection - Mallo's CP
+#### Variable Selection - All Subset
 
 ```{r}
 soccer_allsub = regsubsets(pointspermatch ~ winspermatch + goalspermatch + 
@@ -388,7 +225,7 @@ bestallsubset = lm(pointspermatch ~ winspermatch, data = soccer)
 ```
 
 
-## Comparing RMSE after variable selection
+### Comparing RMSE after variable selection
 
 RMSE All Subset: 0.1642128
 
