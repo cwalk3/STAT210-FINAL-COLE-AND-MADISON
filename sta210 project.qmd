@@ -69,8 +69,146 @@ ggplot(data = soccer, aes(x = winspermatch, y = goalmarginpermatch)) +
   theme_bw()
 ```
 
-
 #### Methods
+Model 1: Linear Regression
+
+Outcome:
+
+- points per match
+
+Predictors:
+
+- wins per match
+
+- goals per match
+
+- goals against per match
+
+- goal margin per match
+
+- top five league
+
+```{r}
+model1 = lm(pointspermatch ~ winspermatch + goalspermatch + 
+               goalsagainstpermatch + goalmarginpermatch + topfiveleague, 
+               data = soccer)
+summary(model1)
+```
+
+Conditions for Model 1:
+Violated linearity, constant variance, and normality
+```{r}
+model1aug = augment(model1)
+
+ggplot(model1aug, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = 'maroon') +
+  labs(x = "Fitted (predicted) values", y = 'Residual') +
+  ggtitle('Residual Plot Violates Linearity & Constant Variance Assumptions') +
+  theme_bw()
+
+ggplot(model1aug, aes(sample = .resid)) +
+  stat_qq() +
+  stat_qq_line() +
+  theme_bw() +
+  labs(x = 'Theoretical quantiles',
+       y = 'Sample quantiles',
+       title = 'QQ Plot Violates Normality Assumption')
+```
+
+testing correlations because something is weird
+
+```{r}
+test = soccer %>%
+  select(pointspermatch, winspermatch, goalspermatch, goalsagainstpermatch, goalmarginpermatch)
+
+cor(test)
+```
+Model 2: Linear Regression
+
+Outcome:
+
+- points per match
+
+Predictors:
+
+- wins per match
+
+- goals per match
+
+- goals against per match
+
+- top five league
+
+```{r}
+model2 = lm(pointspermatch ~ winspermatch + goalspermatch + 
+               goalsagainstpermatch + topfiveleague, 
+               data = soccer)
+summary(model2)
+```
+Check Assumptions for Model 2
+still all violated
+
+```{r}
+model2aug = augment(model2)
+
+ggplot(model2aug, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = 'maroon') +
+  labs(x = "Fitted (predicted) values", y = 'Residual') +
+  ggtitle('Residual Plot Violates Linearity & Constant Variance Assumptions') +
+  theme_bw()
+
+ggplot(model2aug, aes(sample = .resid)) +
+  stat_qq() +
+  stat_qq_line() +
+  theme_bw() +
+  labs(x = 'Theoretical quantiles',
+       y = 'Sample quantiles',
+       title = 'QQ Plot Violates Normality Assumption')
+```
+
+Model 3: Linear Regression
+
+Outcome:
+
+- points per match
+
+Predictors:
+
+- wins per match
+
+- goal margin per match
+
+- top five league
+
+```{r}
+model3 = lm(pointspermatch ~ winspermatch + goalmarginpermatch + topfiveleague, 
+            data = soccer)
+summary(model3)
+```
+Check Assumptions Model 3
+
+```{r}
+model3aug = augment(model3)
+
+ggplot(model3aug, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = 'maroon') +
+  labs(x = "Fitted (predicted) values", y = 'Residual') +
+  ggtitle('Residual Plot Violates Linearity & Constant Variance Assumptions') +
+  theme_bw()
+
+ggplot(model3aug, aes(sample = .resid)) +
+  stat_qq() +
+  stat_qq_line() +
+  theme_bw() +
+  labs(x = 'Theoretical quantiles',
+       y = 'Sample quantiles',
+       title = 'QQ Plot Violates Normality Assumption')
+```
+
+
 
 #### Results
 
