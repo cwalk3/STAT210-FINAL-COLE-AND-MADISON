@@ -241,7 +241,179 @@ model4 = lmer(pointspermatch ~ 1 + goalspermatch + winspermatch + goalsagainstpe
 summary(model4)
 ```
 
-## Comparing Models: RMSE
+Checking assumptions model 4
+
+```{r}
+plot(model4)
+hist((resid(model4) - mean(resid(model4))) / sd(resid(model4)), freq = FALSE); curve(dnorm, add = TRUE)
+```
+
+Model 5: Linear Regression
+
+Outcome:
+
+- points per match
+
+Predictors:
+
+- topfiveleague
+
+- goal margin per match
+
+- goals per match
+
+- goals against per match
+
+```{r}
+model5 = lm(pointspermatch ~ goalspermatch + goalsagainstpermatch + goalmarginpermatch +
+            topfiveleague, data = soccer)
+summary(model5)
+```
+
+Checking Assumptions
+
+```{r}
+model5aug = augment(model5)
+
+ggplot(model5aug, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = 'maroon') +
+  labs(x = "Fitted (predicted) values", y = 'Residual') +
+  ggtitle('Residual Plot Violates Linearity & Constant Variance Assumptions') +
+  theme_bw()
+
+ggplot(model5aug, aes(sample = .resid)) +
+  stat_qq() +
+  stat_qq_line() +
+  theme_bw() +
+  labs(x = 'Theoretical quantiles',
+       y = 'Sample quantiles',
+       title = 'QQ Plot Violates Normality Assumption')
+```
+
+Model 6: linear mixed effects (random intercept for topfiveleague)
+
+Outcome:
+
+- points per match
+
+Predictors:
+
+- random intercept for topfiveleague
+
+- goal margin per match
+
+- goals per match
+
+```{r}
+model6 = lmer(pointspermatch ~ 1 + goalspermatch + goalsagainstpermatch + goalmarginpermatch +
+              (1|topfiveleague), data = soccer)
+summary(model6)
+```
+
+Checking assumptions:
+
+```{r}
+plot(model6)
+hist((resid(model6) - mean(resid(model6))) / sd(resid(model6)), freq = FALSE); curve(dnorm, add = TRUE)
+```
+
+
+## Variable Selection - LASSO
+
+```{r}
+y = soccer$pointspermatch
+x = model.matrix(pointspermatch ~ winspermatch + goalspermatch + goalsagainstpermatch +
+                 goalmarginpermatch + topfiveleague, data = soccer)
+m_lasso_cv = cv.glmnet(x, y, alpha = 1)
+
+best_lambda = m_lasso_cv$lambda.min
+best_lambda
+
+m_best = glmnet(x, y, alpha = 1, lambda = best_lambda)
+m_best$beta
+
+bestlasso = lm(pointspermatch ~ winspermatch + goalmarginpermatch + topfiveleague,
+               data = soccer)
+```
+
+## Variable Selection - Stepwise Selection
+
+```{r}
+m_none = lm(pointspermatch ~ 1, data = soccer)
+m_all = lm(pointspermatch ~ winspermatch + goalspermatch + goalsagainstpermatch +
+                 goalmarginpermatch + topfiveleague, data = soccer)
+```
+
+**Forward Selection**
+
+```{r}
+stepAIC(m_none,
+        scope = list(lower = m_none, upper = m_all),
+        data = soccer, direction = 'forward')
+bestforward = lm(pointspermatch ~ winspermatch + goalmarginpermatch + 
+    topfiveleague, data = soccer)
+```
+
+**Backward Selection**
+
+```{r}
+stepAIC(m_all,
+        scope = list(lower = m_none, upper = m_all),
+        data = soccer, direction = 'backward')
+bestbackward = lm(pointspermatch ~ winspermatch + goalspermatch + goalsagainstpermatch +
+                    topfiveleague, data = soccer)
+```
+
+**Both Selection**
+
+```{r}
+stepAIC(m_none,
+        scope = list(lower = m_none, upper = m_all),
+        data = soccer, direction = 'both')
+bestboth = lm(pointspermatch ~ winspermatch + goalmarginpermatch + topfiveleague, data = soccer)
+```
+
+## Variable Selection - Mallo's CP
+
+```{r}
+soccer_allsub = regsubsets(pointspermatch ~ winspermatch + goalspermatch + 
+                           goalsagainstpermatch + goalmarginpermatch + topfiveleague,
+                           data = soccer,
+                           nbest = 1, nvmax = 5)
+soccer_allsub 
+summary(soccer_allsub)$rsq
+summary(soccer_allsub)$which
+bestallsubset = lm(pointspermatch ~ winspermatch, data = soccer)
+```
+
+
+## Comparing RMSE after variable selection
+
+RMSE All Subset: 0.1642128
+
+**RMSE Best Backward: 0.1348656 - LOWEST**
+
+RMSE Best Both, Forward, Lasso: 0.1348667
+
+(they had the same predictors in it)
+
+CONCLUSION:
+
+- best backward has lowest rmse so better
+
+- predictors: wins per match, top five league, goals per match, goals against per match
+
+```{r}
+rmse(bestallsubset)
+rmse(bestbackward)
+rmse(bestboth)
+rmse(bestforward)
+rmse(bestlasso)
+```
+
+
+##possibly delete -- Comparing Models: RMSE
 
 RMSE Model 1: 0.1348656
 RMSE Model 2: 0.1348656
@@ -254,7 +426,6 @@ rmse(model2)
 rmse(model3)
 rmse(model4)
 ```
-
 
 #### Results
 
