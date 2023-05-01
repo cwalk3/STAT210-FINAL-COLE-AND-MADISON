@@ -10,6 +10,17 @@ editor: visual
 library(tidyverse)
 library(tidymodels)
 library(readxl)
+library(MASS)
+library(leaps)
+library(caret)
+library(glmnet)
+library(Stat2Data)
+#library(statnnet)
+library(lme4)
+library(UpSetR)
+library(nlme)
+library(sjstats)
+set.seed(8)
 soccer <- read_excel("AllTimeRankingByClub.xlsx")
 ```
 
@@ -120,7 +131,7 @@ testing correlations because something is weird
 
 ```{r}
 test = soccer %>%
-  select(pointspermatch, winspermatch, goalspermatch, goalsagainstpermatch, goalmarginpermatch)
+  dplyr::select(pointspermatch, winspermatch, goalspermatch, goalsagainstpermatch, goalmarginpermatch)
 
 cor(test)
 ```
@@ -208,6 +219,41 @@ ggplot(model3aug, aes(sample = .resid)) +
        title = 'QQ Plot Violates Normality Assumption')
 ```
 
+Model 4: Linear Mixed Effects Model (potential violation of independence with topfiveleague)
+
+Outcome:
+
+- points per match
+
+Predictors:
+
+- random intercept for topfiveleague
+
+- goal margin per match
+
+- wins per match
+
+- goals per match
+
+```{r}
+model4 = lmer(pointspermatch ~ 1 + goalspermatch + winspermatch + goalsagainstpermatch +
+              (1|topfiveleague), data = soccer)
+summary(model4)
+```
+
+## Comparing Models: RMSE
+
+RMSE Model 1: 0.1348656
+RMSE Model 2: 0.1348656
+RMSE Model 3: 0.1348667
+RMSE Model 4: 0.1349185
+
+```{r}
+rmse(model1)
+rmse(model2)
+rmse(model3)
+rmse(model4)
+```
 
 
 #### Results
