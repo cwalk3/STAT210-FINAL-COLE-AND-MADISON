@@ -24,9 +24,9 @@ set.seed(8)
 soccer <- read_excel("AllTimeRankingByClub.xlsx")
 ```
 
-#### Introduction and data
+## Introduction and Data
 
-## Data Cleaning
+#### Data Cleaning
 ```{r}
 soccer = soccer %>%
   rename(goals_for = `Goals For`,
@@ -44,7 +44,7 @@ soccer = soccer %>%
   mutate(topfiveleague = ifelse(Country == 'ESP' | Country == 'ENG' | Country == 'GER' | Country == 'ITA' | Country == 'FRA', "top five", "not top five"))
 ```
 
-## EDA
+#### EDA
 
 Plot 1: 
 ```{r}
@@ -249,24 +249,30 @@ rmse(bestforward)
 rmse(bestlasso)
 ```
 
+## Results
 
-##possibly delete -- Comparing Models: RMSE
+**FINAL MODEL:** 
 
-RMSE Model 1: 0.1348656
-RMSE Model 2: 0.1348656
-RMSE Model 3: 0.1348667
-RMSE Model 4: 0.1349185
+y = $\beta_0$ + $\beta_1x_1$ + $\beta_2 x_2$ + $\beta_3 x_3$ + $\beta_4 x_4$ + $\epsilon$
+
+where
+
+$x_1$: wins per match
+
+$x_2$: top five league, 1 = top five
+
+$x_3$: goals per match
+
+$x_4$: goals against per match
 
 ```{r}
-rmse(model1)
-rmse(model2)
-rmse(model3)
-rmse(model4)
+finalmodel = lm(pointspermatch ~ winspermatch + goalspermatch + goalsagainstpermatch +
+                topfiveleague, data = soccer)
+summary(finalmodel)
 ```
 
-#### Results
 
-#### Conclusion
+## Conclusion
 
 
 
