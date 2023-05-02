@@ -34,14 +34,23 @@ soccer = soccer %>%
          goal_diff = `Goal Diff`)
 
 soccer = soccer %>%
+  dplyr::select(-Pts)
+
+soccer = soccer %>%
   mutate(winpercentage = Win/Played,
-         pointspermatch = Pts/Played,
          goalspermatch = goals_for/Played,
          goalsagainstpermatch = goals_against/Played,
          goalmarginpermatch = goal_diff/Played)
 
 soccer = soccer %>%
   mutate(topfiveleague = ifelse(Country == 'ESP' | Country == 'ENG' | Country == 'GER' | Country == 'ITA' | Country == 'FRA', "top five", "not top five"))
+
+soccer = soccer %>%
+  mutate(points = (Win * 3) + (Draw * 1))
+
+soccer = soccer %>%
+  mutate(pointspermatch = points/Played)
+
 ```
 
 #### EDA
