@@ -34,7 +34,7 @@ soccer = soccer %>%
          goal_diff = `Goal Diff`)
 
 soccer = soccer %>%
-  mutate(winspermatch = Win/Played,
+  mutate(winpercentage = Win/Played,
          pointspermatch = Pts/Played,
          goalspermatch = goals_for/Played,
          goalsagainstpermatch = goals_against/Played,
@@ -72,7 +72,7 @@ soccer %>%
 
 Plot 3:
 ```{r warnings = F}
-ggplot(data = soccer, aes(x = winspermatch, y = goalmarginpermatch)) +
+ggplot(data = soccer, aes(x = winpercentage, y = goalmarginpermatch)) +
   geom_point() +
   geom_smooth(method = 'lm', se = F, color = 'midnightblue') +
   labs(x = "Win Percentage", y = 'Goal Margin per Match', 
@@ -84,6 +84,99 @@ ggplot(data = soccer, aes(x = winspermatch, y = goalmarginpermatch)) +
 
 we can only do linear or linear mixed effects...expand later
 
+#### Variable Selection - LASSO
+
+```{r}
+y = soccer$pointspermatch
+x = model.matrix(pointspermatch ~ winpercentage + goalspermatch + goalsagainstpermatch +
+                 goalmarginpermatch + topfiveleague, data = soccer)
+m_lasso_cv = cv.glmnet(x, y, alpha = 1)
+
+best_lambda = m_lasso_cv$lambda.min
+best_lambda
+
+m_best = glmnet(x, y, alpha = 1, lambda = best_lambda)
+m_best$beta
+
+bestlasso = lm(pointspermatch ~ winpercentage + goalmarginpermatch + topfiveleague,
+               data = soccer)
+```
+
+#### Variable Selection - Stepwise Selection
+
+```{r}
+m_none = lm(pointspermatch ~ 1, data = soccer)
+m_all = lm(pointspermatch ~ winpercentage + goalspermatch + goalsagainstpermatch +
+                 goalmarginpermatch + topfiveleague, data = soccer)
+```
+
+**Forward Selection**
+
+```{r}
+stepAIC(m_none,
+        scope = list(lower = m_none, upper = m_all),
+        data = soccer, direction = 'forward')
+bestforward = lm(pointspermatch ~ winpercentage + goalmarginpermatch + 
+    topfiveleague, data = soccer)
+```
+
+**Backward Selection**
+
+```{r}
+stepAIC(m_all,
+        scope = list(lower = m_none, upper = m_all),
+        data = soccer, direction = 'backward')
+bestbackward = lm(pointspermatch ~ winpercentage + goalspermatch + goalsagainstpermatch +
+                    topfiveleague, data = soccer)
+```
+
+**Both Selection**
+
+```{r}
+stepAIC(m_none,
+        scope = list(lower = m_none, upper = m_all),
+        data = soccer, direction = 'both')
+bestboth = lm(pointspermatch ~ winpercentage + goalmarginpermatch + topfiveleague, data = soccer)
+```
+
+#### Variable Selection - All Subset
+
+```{r}
+soccer_allsub = regsubsets(pointspermatch ~ winpercentage + goalspermatch + 
+                           goalsagainstpermatch + goalmarginpermatch + topfiveleague,
+                           data = soccer,
+                           nbest = 1, nvmax = 5)
+soccer_allsub 
+summary(soccer_allsub)$rsq
+summary(soccer_allsub)$which
+bestallsubset = lm(pointspermatch ~ winpercentage, data = soccer)
+```
+
+
+### Comparing RMSE after variable selection
+
+RMSE All Subset: 0.1642128
+
+**RMSE Best Backward: 0.1348656 - LOWEST**
+
+RMSE Best Both, Forward, Lasso: 0.1348667
+
+(they had the same predictors in it)
+
+CONCLUSION:
+
+- best backward has lowest rmse so better
+
+- predictors: wins per match, top five league, goals per match, goals against per match
+
+```{r}
+rmse(bestallsubset)
+rmse(bestbackward)
+rmse(bestboth)
+rmse(bestforward)
+rmse(bestlasso)
+```
+
 #### Checking Assumptions
 Model 1: Linear Regression
 
@@ -93,14 +186,14 @@ Outcome:
 
 Predictors:
 
-- wins per match
+- win percentage
 
 - goal margin per match
 
 - top five league
 
 ```{r}
-linear = lm(pointspermatch ~ winspermatch + goalmarginpermatch + topfiveleague, 
+linear = lm(pointspermatch ~ winpercentage + goalmarginpermatch + topfiveleague, 
             data = soccer)
 summary(linear)
 ```
@@ -134,7 +227,7 @@ Outcome:
 
 Predictors:
 
-- wins per match
+- win percentage
 
 - goal margin per match
 
@@ -142,7 +235,7 @@ Predictors:
 
 
 ```{r}
-linearmixed = lmer(pointspermatch ~ 1 + winspermatch + goalmarginpermatch +
+linearmixed = lmer(pointspermatch ~ 1 + winpercentage + goalmarginpermatch +
               (1|topfiveleague), data = soccer)
 summary(linearmixed)
 ```
@@ -150,124 +243,37 @@ summary(linearmixed)
 
 ```{r}
 plot(linearmixed)
-hist((resid(linearmixed) - mean(resid(linearmixed))) / sd(resid(linearmixed)), freq = FALSE); curve(dnorm, add = TRUE)
+hist((resid(linearmixed) - mean(resid(linearmixed))) / sd(resid(linearmixed)), xlab = "Residual", main = "Histogram of Residuals Violates Normality", freq = FALSE); curve(dnorm, add = TRUE) 
+
 ```
 
 
 Assumptions are worse for mixed effects...moving forward with linear regression
 
-#### Variable Selection - LASSO
-
-```{r}
-y = soccer$pointspermatch
-x = model.matrix(pointspermatch ~ winspermatch + goalspermatch + goalsagainstpermatch +
-                 goalmarginpermatch + topfiveleague, data = soccer)
-m_lasso_cv = cv.glmnet(x, y, alpha = 1)
-
-best_lambda = m_lasso_cv$lambda.min
-best_lambda
-
-m_best = glmnet(x, y, alpha = 1, lambda = best_lambda)
-m_best$beta
-
-bestlasso = lm(pointspermatch ~ winspermatch + goalmarginpermatch + topfiveleague,
-               data = soccer)
-```
-
-#### Variable Selection - Stepwise Selection
-
-```{r}
-m_none = lm(pointspermatch ~ 1, data = soccer)
-m_all = lm(pointspermatch ~ winspermatch + goalspermatch + goalsagainstpermatch +
-                 goalmarginpermatch + topfiveleague, data = soccer)
-```
-
-**Forward Selection**
-
-```{r}
-stepAIC(m_none,
-        scope = list(lower = m_none, upper = m_all),
-        data = soccer, direction = 'forward')
-bestforward = lm(pointspermatch ~ winspermatch + goalmarginpermatch + 
-    topfiveleague, data = soccer)
-```
-
-**Backward Selection**
-
-```{r}
-stepAIC(m_all,
-        scope = list(lower = m_none, upper = m_all),
-        data = soccer, direction = 'backward')
-bestbackward = lm(pointspermatch ~ winspermatch + goalspermatch + goalsagainstpermatch +
-                    topfiveleague, data = soccer)
-```
-
-**Both Selection**
-
-```{r}
-stepAIC(m_none,
-        scope = list(lower = m_none, upper = m_all),
-        data = soccer, direction = 'both')
-bestboth = lm(pointspermatch ~ winspermatch + goalmarginpermatch + topfiveleague, data = soccer)
-```
-
-#### Variable Selection - All Subset
-
-```{r}
-soccer_allsub = regsubsets(pointspermatch ~ winspermatch + goalspermatch + 
-                           goalsagainstpermatch + goalmarginpermatch + topfiveleague,
-                           data = soccer,
-                           nbest = 1, nvmax = 5)
-soccer_allsub 
-summary(soccer_allsub)$rsq
-summary(soccer_allsub)$which
-bestallsubset = lm(pointspermatch ~ winspermatch, data = soccer)
-```
-
-
-### Comparing RMSE after variable selection
-
-RMSE All Subset: 0.1642128
-
-**RMSE Best Backward: 0.1348656 - LOWEST**
-
-RMSE Best Both, Forward, Lasso: 0.1348667
-
-(they had the same predictors in it)
-
-CONCLUSION:
-
-- best backward has lowest rmse so better
-
-- predictors: wins per match, top five league, goals per match, goals against per match
-
-```{r}
-rmse(bestallsubset)
-rmse(bestbackward)
-rmse(bestboth)
-rmse(bestforward)
-rmse(bestlasso)
-```
 
 ## Results
 
 **FINAL MODEL:** 
 
-y = $\beta_0$ + $\beta_1x_1$ + $\beta_2 x_2$ + $\beta_3 x_3$ + $\beta_4 x_4$ + $\epsilon$
+$y_{ij}$ = ($\gamma_{00}$ + $\mu_{0j}$) + $\gamma_1 WinPercentage_{ij}$ + 
+$\gamma_2 TopFiveLeague_{ij}$ + $\gamma_3 GoalsPerMatch_{ij}$ +
+$\gamma_4 GoalsAgainstperMatch_{ij}$ + $\epsilon_{ij}$
 
 where
 
-$x_1$: wins per match
+$y_{ij}$ = points per match
 
-$x_2$: top five league, 1 = top five
+$\gamma_1$: wins percentage
 
-$x_3$: goals per match
+$\gamma_2$: top five league, 1 = top five
 
-$x_4$: goals against per match
+$\gamma_3$: goals per match
+
+$\gamma_4$: goals against per match
 
 ```{r}
-finalmodel = lm(pointspermatch ~ winspermatch + goalspermatch + goalsagainstpermatch +
-                topfiveleague, data = soccer)
+finalmodel = lmer(pointspermatch ~ 1 + winpercentage + goalspermatch + goalsagainstpermatch +
+              (1|topfiveleague), data = soccer)
 summary(finalmodel)
 ```
 
