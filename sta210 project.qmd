@@ -1,12 +1,11 @@
 ---
-title: "sta210 project"
+title: "What Best Predicts Success of a Club in UEFA Champions League?"
 author: "Cole Walker, Madison Griffin"
 format: pdf
 editor: visual
 ---
 
-## loading packages & dataset
-```{r message = F}
+```{r message = F, echo = FALSE, warnings = F}
 library(tidyverse)
 library(tidymodels)
 library(readxl)
@@ -27,7 +26,7 @@ soccer <- read_excel("AllTimeRankingByClub.xlsx")
 ## Introduction and Data
 
 #### Data Cleaning
-```{r}
+```{r message = F, echo = FALSE, warnings = F}
 soccer = soccer %>%
   rename(goals_for = `Goals For`,
          goals_against = `Goals Against`,
@@ -56,7 +55,7 @@ soccer = soccer %>%
 #### EDA
 
 Plot 1: 
-```{r}
+```{r message = F, echo = FALSE, warnings = F}
 soccer %>%
   filter(Titles > 0) %>%
   ggplot(aes(x = reorder(Club, (-Titles)), y = Titles)) +
@@ -68,7 +67,7 @@ soccer %>%
 ```
 
 Plot 2:
-```{r}
+```{r message = F, echo = FALSE, warnings = F}
 soccer %>%
   filter(Titles > 0) %>%
   ggplot(aes(x = reorder(Country, (-Titles)), y = Titles)) +
@@ -80,7 +79,7 @@ soccer %>%
 ```
 
 Plot 3:
-```{r warnings = F}
+```{r message = F, echo = FALSE, warnings = F}
 ggplot(data = soccer, aes(x = winpercentage, y = goalmarginpermatch)) +
   geom_point() +
   geom_smooth(method = 'lm', se = F, color = 'midnightblue') +
@@ -90,12 +89,18 @@ ggplot(data = soccer, aes(x = winpercentage, y = goalmarginpermatch)) +
 ```
 
 ## Methods
+Since our outcome variable is numeric and continuous, we knew our model was 
+either a linear regression or a linear mixed effects model. We hypothesized that 
+the best predictors to determine the success of a club in the UEFA Champions
+league were win percentage, goals scored per match, goals scored against per 
+match, goal margin per match, and whether a club belonged to a top five country 
+league (England, France, Italy, Spain, or Germany).
 
-we can only do linear or linear mixed effects...expand later
+To select the most effective variables we conducted five different variable 
+selection processes: all subset, stepwise (forward, backward, and both), and 
+LASSO. 
 
-#### Variable Selection - LASSO
-
-```{r}
+```{LASSO message = F, echo = FALSE, warnings = F, output = F}
 y = soccer$pointspermatch
 x = model.matrix(pointspermatch ~ winpercentage + goalspermatch + goalsagainstpermatch +
                  goalmarginpermatch + topfiveleague, data = soccer)
@@ -111,17 +116,13 @@ bestlasso = lm(pointspermatch ~ winpercentage + goalmarginpermatch + topfiveleag
                data = soccer)
 ```
 
-#### Variable Selection - Stepwise Selection
-
-```{r}
+```{STEPWISE message = F, echo = FALSE, warnings = F}
 m_none = lm(pointspermatch ~ 1, data = soccer)
 m_all = lm(pointspermatch ~ winpercentage + goalspermatch + goalsagainstpermatch +
                  goalmarginpermatch + topfiveleague, data = soccer)
 ```
 
-**Forward Selection**
-
-```{r}
+```{FORWARD message = F, echo = FALSE, warnings = F, output = F}
 stepAIC(m_none,
         scope = list(lower = m_none, upper = m_all),
         data = soccer, direction = 'forward')
@@ -129,9 +130,7 @@ bestforward = lm(pointspermatch ~ winpercentage + goalmarginpermatch +
     topfiveleague, data = soccer)
 ```
 
-**Backward Selection**
-
-```{r}
+```{BACKWARD message = F, echo = FALSE, warnings = F, output = F}
 stepAIC(m_all,
         scope = list(lower = m_none, upper = m_all),
         data = soccer, direction = 'backward')
@@ -139,18 +138,14 @@ bestbackward = lm(pointspermatch ~ winpercentage + goalspermatch + goalsagainstp
                     topfiveleague, data = soccer)
 ```
 
-**Both Selection**
-
-```{r}
+```{BOTH message = F, echo = FALSE, warnings = F, output = F}
 stepAIC(m_none,
         scope = list(lower = m_none, upper = m_all),
         data = soccer, direction = 'both')
 bestboth = lm(pointspermatch ~ winpercentage + goalmarginpermatch + topfiveleague, data = soccer)
 ```
 
-#### Variable Selection - All Subset
-
-```{r}
+```{ALL message = F, echo = FALSE, warnings = F, output = F}
 soccer_allsub = regsubsets(pointspermatch ~ winpercentage + goalspermatch + 
                            goalsagainstpermatch + goalmarginpermatch + topfiveleague,
                            data = soccer,
@@ -160,56 +155,67 @@ summary(soccer_allsub)$rsq
 summary(soccer_allsub)$which
 bestallsubset = lm(pointspermatch ~ winpercentage, data = soccer)
 ```
-
+The variables selected in forward selection, both directions selection, 
+and LASSO were win percentage, goal margin per match, and top five league. The 
+variables selected in backward selection were win percentage, goals scored per 
+match, goals scored against per match, and top five league. The variable 
+selected for all subset selection using Mallo's CP was only win percentage.
 
 ### Comparing RMSE after variable selection
+To compare each of these models, we compared their RMSE. 
 
-RMSE All Subset: 0.1642128
+RMSE All Subset = 0.1642128
 
-**RMSE Best Backward: 0.1348656 - LOWEST**
+RMSE Best Backward = 0.1348656
 
-RMSE Best Both, Forward, Lasso: 0.1348667
+RMSE Best Both, Forward, and Lasso (because they chose the same variables) = 
+0.1348667
 
-(they had the same predictors in it)
-
-CONCLUSION:
-
-- best backward has lowest rmse so better
-
-- predictors: wins per match, top five league, goals per match, goals against per match
-
-```{r}
+```{r message = F, echo = FALSE, warnings = F, output = F}
 rmse(bestallsubset)
 rmse(bestbackward)
 rmse(bestboth)
 rmse(bestforward)
 rmse(bestlasso)
 ```
+Since the model from backwards selection had the lowest RMSE, we decided to use
+those variables to assess linear regression assumptions and conditions (win 
+percentage, goals scored per match, goals against per match, and top five league).  
+
+We hypothesized that there could be a violation of independence because clubs 
+in the same country, especially countries that are in the top 5 league, could 
+have access to more money, better facilities, coaches, and training regimens, 
+which could violate their independence from each other. Because of this, we 
+tested the linear model assumptions and conditions using the variables chosen 
+by backward selection in two models: 1) a linear regression, and 2) a linear 
+mixed effects model with a random intercept for top five leagues.
 
 #### Checking Assumptions
 Model 1: Linear Regression
 
-Outcome:
+**Outcome:**
 
 - points per match
 
-Predictors:
+**Predictors:**
 
 - win percentage
 
-- goal margin per match
+- goal scored per match
+
+- goals against per match
 
 - top five league
-
-```{r}
-linear = lm(pointspermatch ~ winpercentage + goalmarginpermatch + topfiveleague, 
-            data = soccer)
-summary(linear)
+```{r message = F, echo = FALSE, warnings = F}
+linear = lm(pointspermatch ~ winpercentage + goalspermatch + goalsagainstpermatch + 
+              topfiveleague, data = soccer)
 ```
-
-Conditions for Model 1:
-Violated linearity, constant variance, and normality
-```{r}
+For the linear regression, the residual plot (shown below) violates both 
+linearity and constant variance. The model starts to underpredict more on the 
+right side of the graph, and there are three diagonal patterns across the 
+residual plot. The Q-Q plot (shown below) also deviates from the line in the 
+bottom left and upper right, thus violating normality.
+```{r message = F, echo = FALSE, warnings = F}
 linearaug = augment(linear)
 
 ggplot(linearaug, aes(x = .fitted, y = .resid)) +
@@ -227,38 +233,38 @@ ggplot(linearaug, aes(sample = .resid)) +
        y = 'Sample quantiles',
        title = 'QQ Plot Violates Normality Assumption')
 ```
-
 Model 2: Linear Mixed Effects Model
 
-Outcome:
+**Outcome:**
 
 - points per match
 
-Predictors:
+**Predictors:**
 
 - win percentage
 
-- goal margin per match
+- goal scored per match
+
+- goals against per match
 
 - random intercept for top five league
-
-
-```{r}
-linearmixed = lmer(pointspermatch ~ 1 + winpercentage + goalmarginpermatch +
+```{r message = F, echo = FALSE, warnings = F}
+linearmixed = lmer(pointspermatch ~ 1 + winpercentage + goalspermatch + goalsagainstpermatch +
               (1|topfiveleague), data = soccer)
-summary(linearmixed)
 ```
-
-
-```{r}
+The residual plot (shown below) for the linear mixed effects model also has 
+three diagonal patterns. The residual plot is also clumped, and begins to 
+underpredict on the right side of the plot. The histogram of residuals 
+(shown below) also violates normality, as the bins are relatively large and 
+the bars in the middle fall outside of the normal curve.
+```{r message = F, echo = FALSE, warnings = F}
 plot(linearmixed)
 hist((resid(linearmixed) - mean(resid(linearmixed))) / sd(resid(linearmixed)), xlab = "Residual", main = "Histogram of Residuals Violates Normality", freq = FALSE); curve(dnorm, add = TRUE) 
 
 ```
-
-
-Assumptions are worse for mixed effects...moving forward with linear regression
-
+Both models violated the assumptions, however, with the potential violation of 
+independence because of the variable top five league, we will choose the 
+linear mixed model as our final model.
 
 ## Results
 
@@ -280,12 +286,30 @@ $\gamma_3$: goals per match
 
 $\gamma_4$: goals against per match
 
-```{r}
+```{r message = F, echo = FALSE, warnings = F}
 finalmodel = lmer(pointspermatch ~ 1 + winpercentage + goalspermatch + goalsagainstpermatch +
               (1|topfiveleague), data = soccer)
 summary(finalmodel)
 ```
+The coefficient for win percentage (fixed effect) is 2.383. This means that at a 
+given league (top five or not top five), every additional one-unit increase in a 
+given club’s win percentage, their predicted points per match is expected to 
+increase by 2.383 points per match, while controlling for other variables in our 
+model. The coefficient for goals against per match is -0.0984. This means that 
+at a given league (top five or not top five), for every additional goal against 
+per match, points per match is expected to decrease by 0.0984, while controlling 
+for other variables in our model.  
 
+Though the output does not provide p-values, we will refer to t values to 
+interpret significance of our fixed effects. Both win percentage (t value = 
+19.082) and goals against per match (t value = -14.843) have high t values, 
+indicating their significance. Goals scored per match have a small t values
+(t value = 6.688), showing it was not as significant as the other predictors.
+
+In summary, win percentage, a club’s defensive ability, a club’s offensive 
+ability, and whether a club is from a country in the top five leagues were 
+found to be the best predictors of UEFA Champions League success, however win 
+percentage and a club’s defensive ability were the most significant.
 
 ## Conclusion
 
