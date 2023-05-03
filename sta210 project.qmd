@@ -1,5 +1,5 @@
 ---
-title: "What Best Predicts Success of a Club in UEFA Champions League?"
+title: "What is best associated with how successful a team has performed in the UEFA Champions League?"
 author: "Cole Walker, Madison Griffin"
 format: pdf
 editor: visual
