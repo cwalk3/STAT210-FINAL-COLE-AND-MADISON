@@ -54,37 +54,13 @@ soccer = soccer %>%
 
 #### EDA
 
-Plot 1: 
-```{r message = F, echo = FALSE, warnings = F}
-soccer %>%
-  filter(Titles > 0) %>%
-  ggplot(aes(x = reorder(Club, (-Titles)), y = Titles)) +
-  geom_bar(stat = 'identity') +
-  labs(x = 'Club', y = 'Number of Titles', title = 'Number of Titles for each Club',
-       subtitle = 'Excluding Clubs That Have Never Won a Title') +
-  theme_bw() +
-  scale_x_discrete(guide = guide_axis(angle = 45))
-```
-
-Plot 2:
-```{r message = F, echo = FALSE, warnings = F}
-soccer %>%
-  filter(Titles > 0) %>%
-  ggplot(aes(x = reorder(Country, (-Titles)), y = Titles)) +
-  geom_bar(stat = 'identity') +
-  labs(x = 'Country', y = 'Number of Titles', title = 'Number of Titles per Country',
-       subtitle = 'Excluding Clubs That Have Never Won a Title') +
-  theme_bw() +
-  scale_x_discrete(guide = guide_axis(angle = 45))
-```
-
 Plot 3:
 ```{r message = F, echo = FALSE, warnings = F}
-ggplot(data = soccer, aes(x = winpercentage, y = goalmarginpermatch)) +
+ggplot(data = soccer, aes(x = goalspermatch, y = pointspermatch)) +
   geom_point() +
   geom_smooth(method = 'lm', se = F, color = 'midnightblue') +
-  labs(x = "Win Percentage", y = 'Goal Margin per Match', 
-       title = 'Club Win Percentage in Tournament vs. Goal Margin Per Match') +
+  labs(x = "Goals per Match", y = 'Points per Match', 
+       title = 'Strong Positive Relationship between \nGoals per Match and Points per Match') +
   theme_bw()
 ```
 
@@ -258,7 +234,7 @@ underpredict on the right side of the plot. The histogram of residuals
 (shown below) also violates normality, as the bins are relatively large and 
 the bars in the middle fall outside of the normal curve.
 ```{r message = F, echo = FALSE, warnings = F}
-plot(linearmixed)
+plot(linearmixed, xlab = "Fitted (predicted) values", ylab = 'Residual', main = 'Residual Plot Violates Linearity and Constant Variance')
 hist((resid(linearmixed) - mean(resid(linearmixed))) / sd(resid(linearmixed)), xlab = "Residual", main = "Histogram of Residuals Violates Normality", freq = FALSE); curve(dnorm, add = TRUE) 
 
 ```
@@ -313,7 +289,31 @@ percentage and a club’s defensive ability were the most significant.
 
 ## Conclusion
 
+## Appendix
 
+Plot 1: 
+```{r message = F, echo = FALSE, warnings = F}
+soccer %>%
+  filter(Titles > 0) %>%
+  ggplot(aes(x = reorder(Club, (-Titles)), y = Titles)) +
+  geom_bar(stat = 'identity') +
+  labs(x = 'Club', y = 'Number of Titles', title = 'Number of Titles for each Club',
+       subtitle = 'Excluding Clubs That Have Never Won a Title') +
+  theme_bw() +
+  scale_x_discrete(guide = guide_axis(angle = 45))
+```
+
+Plot 2:
+```{r message = F, echo = FALSE, warnings = F}
+soccer %>%
+  filter(Titles > 0) %>%
+  ggplot(aes(x = reorder(Country, (-Titles)), y = Titles)) +
+  geom_bar(stat = 'identity') +
+  labs(x = 'Country', y = 'Number of Titles', title = 'Number of Titles per Country',
+       subtitle = 'Excluding Clubs That Have Never Won a Title') +
+  theme_bw() +
+  scale_x_discrete(guide = guide_axis(angle = 45))
+```
 
 
 
