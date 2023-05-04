@@ -366,7 +366,7 @@ club’s historical success in the UCL. Our model found that each of the three
 fixed predictors chosen by our variable selection methods had a linear 
 relationship with our chosen response variable that best represented success 
 in the tournament. In statistical language, regardless of the club’s domestic 
-league, our model predicted that there was a positive relationship between both
+league, our model predicted that there was a positive relationship between both 
 a club’s win percentage and their predicted points per match as well as between 
 their goals per match and their predicted points per match, while adjusting for
 the other variables in the model. Our model also predicted that, regardless of 
@@ -378,31 +378,40 @@ that maximizing goals scored and minimizing goals allowed attributes to winning
 and thus gaining points. By randomizing the effect of a club belonging to top 
 five league or non-top-five league, we were able to address potential violations 
 of independence between clubs given that clubs from the same league or tiered 
-leagues may have similar access to resources, training equipment, and quality of
+leagues may have similar access to resources, training equipment, and quality of 
 coaching personnel.
  
-Unfortunately, some clear limitations still exist in our data and two especially
-stand out. First, our original dataset did not provide any additional information 
-on which specific years each team has competed in the UCL, so we were unable to 
-determine whether or not their statistics incorporated data from the pre-1992 
-tournament rebranding and subsequent gradual rule/qualification changes, which 
-could have affected the rigors of the tournament. Second, as was referenced in 
-the introduction, we utilized points per game as our response variable that best 
-attributed success in the UCL rather than titles won to better incorporate all 
-our observations even though the latter is almost always seen as the best 
-determinant of success in any sports tournament.
+Unfortunately, some clear limitations still exist in our data and two especially 
+stand out. First, our original dataset did not provide any additional 
+information on which specific years each team has competed in the UCL, so we 
+were unable to determine whether or not their statistics incorporated data from 
+the pre-1992 tournament rebranding and subsequent gradual rule/qualification 
+changes, which could have affected the rigors of the tournament (Naji, 2022). 
+Second, as was referenced in the introduction, we utilized points per game as 
+our response variable that best attributed success in the UCL rather than titles
+won to better incorporate all our observations even though the latter is almost
+always seen as the best determinant of success in any sports tournament.
  
-Future studies could be designed to address some of these limitations. First,
+Future studies could be designed to address some of these limitations. First, 
 more rigorous research could be conducted to incorporate each club’s 
-participating seasons in the UCL into the dataset to account for potential rule
-changes over time. Second, a future dataset could incorporate a new variable that 
-averages how long. Second, perhaps a study only incorporating the clubs who 
+participating seasons in the UCL into the dataset to account for potential rule 
+changes over time. Second, a future dataset could incorporate a new variable 
+that averages how long. Second, perhaps a study only incorporating the clubs who 
 have won the UCL could examine the relationship between the same predictors we 
 chose and a new response variable called “title success” (number of titles 
 divided by number of tournaments participated in). This analysis could enable 
 researchers to better understand how factors such as offensive prowess, 
 defensive stoutness, and the ability to secure wins each associate with a team’s 
 title success.
+
+## Works Cited
+
+Naji, B. (2022, July 22). Champions League Era Stats: AllTimeRankingsByClub. 
+Kaggle.
+https://www.kaggle.com/datasets/basharalkuwaiti/champions-league-era-stats
+
+Snowman Sports Media (Director). (2020, February 4). UEFA Champions League 
+Explained. https://www.youtube.com/watch?v=4AsLXuXzhrg
 
 ## Appendix
 
